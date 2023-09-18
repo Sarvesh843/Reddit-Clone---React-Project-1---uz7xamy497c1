@@ -1,4 +1,4 @@
-import { Alert, AlertIcon, Flex, Icon,Text } from "@chakra-ui/react";
+import { Alert, AlertIcon, Flex, Icon, Text } from "@chakra-ui/react";
 import React, { useState } from "react";
 import { BiPoll } from "react-icons/bi";
 import { BsLink45Deg, BsMic } from "react-icons/bs";
@@ -18,9 +18,11 @@ import {
 } from "firebase/firestore";
 import { firestore, storage } from "@/firebase/clientApp";
 import { getDownloadURL, ref, uploadString } from "firebase/storage";
+import useSelectFile from "@/hooks/useSelectFile";
 
 type NewPostFormProps = {
   user: User;
+  communityImageUrl?: string;
 };
 
 const formTabs: TabItems[] = [
@@ -51,7 +53,7 @@ export type TabItems = {
   icon: typeof Icon.arguments;
 };
 
-const NewPostForm: React.FC<NewPostFormProps> = ({ user }) => {
+const NewPostForm: React.FC<NewPostFormProps> = ({ user, communityImageUrl }) => {
   const router = useRouter();
   const [selectedTab, setSelectedTab] = useState(formTabs[0].title);
   const [textInputs, setTextInputs] = useState({
@@ -59,7 +61,7 @@ const NewPostForm: React.FC<NewPostFormProps> = ({ user }) => {
     body: "",
   });
 
-  const [selectedFile, setSelectedFile] = useState<string>();
+  const { selectedFile, setSelectedFile, onSelectFlie } = useSelectFile();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
 
@@ -68,6 +70,7 @@ const NewPostForm: React.FC<NewPostFormProps> = ({ user }) => {
     const newPost: Post = {
       // id: communityId as string,
       communityId: communityId as string,
+      communityImageUrl: communityImageUrl || "",
       creatorId: user?.uid,
       creatorDisplayName: user.email!.split("@")[0],
       title: textInputs.title,
@@ -95,20 +98,8 @@ const NewPostForm: React.FC<NewPostFormProps> = ({ user }) => {
       setError(true);
     }
     setLoading(false);
-
   };
 
-  const onSelectImage = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const reader = new FileReader();
-    if (event.target.files?.[0]) {
-      reader.readAsDataURL(event.target.files[0]);
-    }
-    reader.onload = (readerEvent) => {
-      if (readerEvent.target?.result) {
-        setSelectedFile(readerEvent.target.result as string);
-      }
-    };
-  };
 
   const onTextChange = (
     event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -146,17 +137,17 @@ const NewPostForm: React.FC<NewPostFormProps> = ({ user }) => {
         {selectedTab === "Images & Video" && (
           <ImageUpload
             selectedFile={selectedFile}
-            onSelectImage={onSelectImage}
+            onSelectImage={onSelectFlie}
             setSelectedTab={setSelectedTab}
             setSelectedFile={setSelectedFile}
           />
         )}
       </Flex>
       {error && (
-        <Alert status='error'>
-        <AlertIcon />
-        <Text mr={2}>Error creating posts</Text>
-      </Alert>
+        <Alert status="error">
+          <AlertIcon />
+          <Text mr={2}>Error creating posts</Text>
+        </Alert>
       )}
     </Flex>
   );
